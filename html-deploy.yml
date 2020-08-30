@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: htmlexpose
+  labels:
+    app: htmlwebsite
+spec:
+  type: NodePort
+  ports:
+  -  port: 80
+     targetPort: 80
+  selector:
+    app: htmlwebsite
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: html-pv-claim
+  labels:
+    app: html
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: html-deploy
+  labels:
+    app: htmlwebsite
+spec:
+  selector:
+    matchLabels:
+      app: htmlwebsite
+  template:
+    metadata:
+      labels:
+        app: htmlwebsite
+    spec:
+      containers:
+      - image: httpd
+        name: html-con
+        ports:
+        - containerPort: 80
+          
+        volumeMounts:
+        - name: html-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: html-storage
+        persistentVolumeClaim:
+          claimName: html-pv-claim
